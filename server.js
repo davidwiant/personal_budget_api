@@ -17,6 +17,28 @@ app.param('category', (req, res, next, category) => {
         res.status(404).send({error: 'No envelopes found for this category'});    }
 });
 
+app.param('from', (req, res, next, from) => {
+    const fromCategory = envelopes.find(envelope => envelope.category == from);
+
+    if(fromCategory) {
+        req.fromCategory = fromCategory;
+        next();
+    } else {
+        res.status(404).send({error: `No envelopes found for ${from} category`});    
+    }
+});
+
+app.param('to', (req, res, next, to) => {
+    const toCategory = envelopes.find(envelope => envelope.category == to);
+
+    if(toCategory) {
+        req.toCategory = toCategory;
+        next();
+    } else {
+        res.status(404).send({error: `No envelopes found for ${to} category`});    
+    }
+});
+
 const PORT = process.env.port || 3000;
 
 const envelopes = [];
@@ -52,6 +74,13 @@ app.patch('/envelopes/:category', (req, res, next) => {
         };
     }
     res.send(envelope);
+});
+
+app.post('/envelopes/transfer/:from/:to', (req, res, next) => {
+    const transfer = req.body;
+    req.fromCategory.amount -= transfer.amount;
+    req.toCategory.amount += transfer.amount;
+    res.status(200).send('Transfer complete')
 });
 
 app.delete('/envelopes/:category', (req, res, next) => {
